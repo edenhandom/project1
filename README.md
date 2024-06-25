@@ -14,10 +14,11 @@ Input from user:
 - Natural light access?
 - Animals or children?
 
-Trefle API
-Perenual API
+This program uses:
+- [Trefle API](http://trefle.io/)
+- [Perenual API](https://perenual.com/docs/api)
 
 ### Contact information (GitHub)
-Abi Sheldon - abigailsheldon
-Eden Andom - edenhandom
+Abi Sheldon - [abigailsheldon](https://github.com/abigailsheldon)
+Eden Andom - [edenhandom](https://github.com/edenhandom)
 
