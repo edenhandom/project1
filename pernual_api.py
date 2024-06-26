@@ -1,24 +1,28 @@
 import requests
-import os
-import pandas as pd
 import json
-import re
 import sqlite3
 
 '''
-we want
-- name, scientific name, type (aka tree), watering, watering period, posionous to pets/humans, indoor, sunlight 
+Data we want from the API:
+- name, scientific name, type (aka tree), watering, watering period, poisonous to pets/humans, indoor, sunlight 
 '''
 
 API_KEY = 'sk-X8KK667c51ee33cf36041'
 BASE_URL_PLANT_LIST = f'https://perenual.com/api/species-list?key={API_KEY}'
 BASE_URL_PLANT_DETAILS = f'https://perenual.com/api/species/details/{{ID}}?key={API_KEY}'
 
+# Connect to SQLite databse
 conn = sqlite3.connect('plants.db')
 cursor = conn.cursor()
 
+# Function to create tables
 def create_tables():
-    # table for plant id 
+
+    # Drop the tables if they exist (avoid duplicate errors)
+    cursor.execute('DROP TABLE IF EXISTS plant_id')
+    cursor.execute('DROP TABLE IF EXISTS plant_data')
+
+    # Table for plant ids
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS plant_id (
         id INTEGER PRIMARY KEY
@@ -40,11 +44,10 @@ def create_tables():
         type TEXT
     )
     ''')
-    
-    
     conn.commit()
-# done with creating tables
+# Done with creating tables
 
+# Store plant IDs from plant API in plant id table
 def store_plant_ids():
     response_plant_list = requests.get(BASE_URL_PLANT_LIST)
     if response_plant_list.status_code == 200:
@@ -61,15 +64,17 @@ def store_plant_ids():
                     INSERT INTO plant_id (id)
                     VALUES (?)
                     ''', (plant_id,))
-                
         conn.commit()
     else:
         print("Failed to fetch")
 
+# Function to store plant details plant data table
 def store_plant_data(plant_id):
     response_plant_details = requests.get(BASE_URL_PLANT_DETAILS.format(ID=plant_id))
     if response_plant_details.status_code == 200:
+        
         data = response_plant_details.json()
+        
         id = data.get('id', 'Unknown')
         common_name = data.get('common_name', 'Unknown')
         scientific_name = data.get('scientific_name', [])
@@ -105,6 +110,9 @@ def main():
     for id_from_list in ids_list:
         store_plant_data(id_from_list)
     
+    cursor.execute('SELECT * FROM plant_data')
+    print(cursor.fetchall())
+
 main()
     
 
