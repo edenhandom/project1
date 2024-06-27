@@ -9,6 +9,7 @@ BASE_URL_PLANT_DETAILS = f'https://perenual.com/api/species/details/{{ID}}?key={
 conn = sqlite3.connect('plants.db')
 cursor = conn.cursor()
 
+
 def create_tables():
     cursor.execute('DROP TABLE IF EXISTS plant_id')
     cursor.execute('DROP TABLE IF EXISTS plant_data')
@@ -34,6 +35,7 @@ def create_tables():
     ''')
     conn.commit()
 
+
 def store_plant_ids():
     response_plant_list = requests.get(BASE_URL_PLANT_LIST, params={'key': API_KEY})
     if response_plant_list.status_code == 200:
@@ -42,7 +44,7 @@ def store_plant_ids():
             plants = data['data']
             for plant in plants:
                 plant_id = plant.get('id')
-                if plant_id:  
+                if plant_id:
                     cursor.execute('SELECT id FROM plant_id WHERE id = ?', (plant_id,))
                     existing_id = cursor.fetchone()
                     if not existing_id:
@@ -54,31 +56,33 @@ def store_plant_ids():
         print("Failed to fetch")
     conn.commit()
 
+
 def store_plant_data(plant_id, watering_pref, maintenance_pref):
     response_plant_details = requests.get(BASE_URL_PLANT_DETAILS.format(ID=plant_id))
     if response_plant_details.status_code == 200:
         data = response_plant_details.json()
-        id = data.get('id', 'Unknown')
-        common_name = data.get('common_name', 'Unknown')
-        scientific_name = data.get('scientific_name', [])
-        sunlight = data.get('sunlight', [])
-        watering = data.get('watering', 'Unknown').lower()
-        watering_period = data.get('watering_period', 'Unknown')
-        maintenance = data.get('maintenance', 'Unknown').lower()
-        
-        description = data.get('description', 'Unknown')
-        type = data.get('type', 'Unknown')
-        
-        sunlight_str = ', '.join(sunlight)
-        scientific_name = scientific_name[0] if scientific_name else 'Unknown'
+        if data: #added
+            id = data.get('id', 'Unknown')
+            common_name = data.get('common_name', 'Unknown')
+            scientific_name = data.get('scientific_name', [])
+            sunlight = data.get('sunlight', [])
+            watering = data.get('watering', 'Unknown').lower()
+            watering_period = data.get('watering_period', 'Unknown')
+            maintenance = data.get('maintenance', 'Unknown').lower()
 
-        cursor.execute('''
-        INSERT INTO plant_data (
-            id, common_name, scientific_name, sunlight, watering, watering_period, maintenance, description, type
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (plant_id, common_name, scientific_name, sunlight_str, watering, watering_period, maintenance, description, type)
-        )
-        conn.commit()
+            description = data.get('description', 'Unknown')
+            type = data.get('type', 'Unknown')
+            
+            sunlight_str = ', '.join(sunlight)
+            scientific_name = scientific_name[0] if scientific_name else 'Unknown'
+
+            cursor.execute('''
+            INSERT INTO plant_data (
+                id, common_name, scientific_name, sunlight, watering, watering_period, maintenance, description, type
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (plant_id, common_name, scientific_name, sunlight_str, watering, watering_period, maintenance, description, type)
+            )
+            conn.commit()
     else:
         print("Failed to fetch")
 
@@ -101,15 +105,16 @@ def match_plants(sunlight_pref, watering_pref, maintenance_pref):
         temp_matches = matches[:5]
         for match in temp_matches:
             print(f"Common Name: {match[1]}\n"
-                f"Scientific Name: {match[2]}\n"
-                f"Sunlight: {match[3]}\n"
-                f"Watering: {match[4]}\n"
-                f"Watering period: {match[5]}\n"
-                f"Maintenance: {match[6]}\n"
-                f"Type: {match[8]}\n\n"
-                f"Description: {match[7]}\n")
+                  f"Scientific Name: {match[2]}\n"
+                  f"Sunlight: {match[3]}\n"
+                  f"Watering: {match[4]}\n"
+                  f"Watering period: {match[5]}\n"
+                  f"Maintenance: {match[6]}\n"
+                  f"Type: {match[8]}\n\n"
+                  f"Description: {match[7]}\n")
     else:
         print("No matches found :( Maybe a plastic plant is better for you...)")
+
 
 def validate_input(prompt, valid_options):
     while True:
@@ -118,6 +123,7 @@ def validate_input(prompt, valid_options):
             return user_input
         else:
             print(f"Invalid input. Please use the examples given and enter one of the following options: {', '.join(valid_options)}")
+
 
 def main():
     create_tables()
@@ -141,9 +147,4 @@ def main():
 
     match_plants(sunlight_pref, watering_pref, maintenance_pref)
 
-    #cursor.execute('SELECT * FROM plant_data')
-    #print(cursor.fetchall())
-
-
 main()
-
