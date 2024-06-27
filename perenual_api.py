@@ -2,36 +2,23 @@ import requests
 import json
 import sqlite3
 
-'''
-Data we want from the API:
-- name, scientific name, type (aka tree), watering, watering period,
-poisonous to pets/humans, indoor, sunlight
-'''
-
 API_KEY = 'sk-DFJP667c913a4a5396041'
-BASE_URL_PLANT_LIST = f'https://perenual.com/api/species-list?key={API_KEY}'
-BASE_URL_PLANT_DETAILS = f'https://perenual.com/api/species/details/{{ID}}?key={API_KEY}'
+BASE_URL_PLANT_LIST = f'https://perenual.com/api/species-list?key={API_KEY}&indoor=1'
+BASE_URL_PLANT_DETAILS = f'https://perenual.com/api/species/details/{{ID}}?key={API_KEY}&indoor=1'
 
-# Connect to SQLite databse
 conn = sqlite3.connect('plants.db')
 cursor = conn.cursor()
 
-
-# Function to create tables
 def create_tables():
-
-    # Drop the tables if they exist (avoid duplicate errors)
     cursor.execute('DROP TABLE IF EXISTS plant_id')
     cursor.execute('DROP TABLE IF EXISTS plant_data')
 
-    # Table for plant ids
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS plant_id (
         id INTEGER PRIMARY KEY
     )
     ''')
 
-    # Table for plant details
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS plant_data (
         id INTEGER PRIMARY KEY,
@@ -41,144 +28,122 @@ def create_tables():
         watering TEXT,
         watering_period TEXT,
         maintenance TEXT,
-
+        description TEXT,
         type TEXT
     )
     ''')
     conn.commit()
-# Done with creating tables
 
-
-# Store plant IDs from plant API in plant id table
 def store_plant_ids():
-    # Picked a random window of data from the API to look at
-    page = 166
-    while page <= 169:
-        response_plant_list = requests.get(BASE_URL_PLANT_LIST, params={'key': API_KEY, 'page': page})
-        # If request is successful
-        if response_plant_list.status_code == 200:
-            # Grab JSON data from the API
-            data = response_plant_list.json()
-            if 'data' in data:
-                # Grab dictionary of plant items in API data
-                plants = data['data']
-                if not plants:
-                    break
-                # Look at each plant item in dictionary, grab plant ID value
-                for plant in plants:
-                    plant_id = plant.get('id')
-                    # If the plant item is not of type "tree", add to ID table
-                    if plant_id and (plant.get("type") != 'tree'):
-                        cursor.execute('SELECT id FROM plant_id WHERE id = ?', (plant_id,))
-                        existing_id = cursor.fetchone()
-                        if not existing_id:
-                            cursor.execute('''
-                            INSERT INTO plant_id (id)
-                            VALUES (?)
-                            ''', (plant_id,))
-                page += 1
-            else:
-                break
-        else:
-            print("Failed to fetch")
-            break
+    response_plant_list = requests.get(BASE_URL_PLANT_LIST, params={'key': API_KEY})
+    if response_plant_list.status_code == 200:
+        data = response_plant_list.json()
+        if 'data' in data:
+            plants = data['data']
+            for plant in plants:
+                plant_id = plant.get('id')
+                if plant_id:  
+                    cursor.execute('SELECT id FROM plant_id WHERE id = ?', (plant_id,))
+                    existing_id = cursor.fetchone()
+                    if not existing_id:
+                        cursor.execute('''
+                        INSERT INTO plant_id (id)
+                        VALUES (?)
+                        ''', (plant_id,))
+    else:
+        print("Failed to fetch")
     conn.commit()
 
-
-# Function to store plant details in plant data table
-def store_plant_data(plant_id):
+def store_plant_data(plant_id, watering_pref, maintenance_pref):
     response_plant_details = requests.get(BASE_URL_PLANT_DETAILS.format(ID=plant_id))
-    # Check if request is successful
     if response_plant_details.status_code == 200:
-        # Store response
         data = response_plant_details.json()
-
-        # Grab plant details
         id = data.get('id', 'Unknown')
         common_name = data.get('common_name', 'Unknown')
         scientific_name = data.get('scientific_name', [])
         sunlight = data.get('sunlight', [])
-        watering = data.get('watering', 'Unknown')
+        watering = data.get('watering', 'Unknown').lower()
         watering_period = data.get('watering_period', 'Unknown')
-        maintenance = data.get('maintenance', 'Unknown')
+        maintenance = data.get('maintenance', 'Unknown').lower()
+        
+        description = data.get('description', 'Unknown')
         type = data.get('type', 'Unknown')
-
-        # Formatting
+        
         sunlight_str = ', '.join(sunlight)
         scientific_name = scientific_name[0] if scientific_name else 'Unknown'
 
-        # Store in plant details table
         cursor.execute('''
         INSERT INTO plant_data (
-            id, common_name, scientific_name, sunlight, watering, watering_period, maintenance, type
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (plant_id, common_name, scientific_name, sunlight_str, watering, watering_period, maintenance, type)
+            id, common_name, scientific_name, sunlight, watering, watering_period, maintenance, description, type
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (plant_id, common_name, scientific_name, sunlight_str, watering, watering_period, maintenance, description, type)
         )
         conn.commit()
     else:
         print("Failed to fetch")
 
 
-# Function to match user to plant based on preferences
-def match_plants():
-    print("Please enter your plant preferences:")
-    sunlight_pref = input("Preferred sunlight (e.g., 'full sun', 'partial shade'): ").lower()
-    watering_pref = input("Preferred watering (e.g., 'moderate', 'low'): ").lower()
-    watering_time_pref = input("Preferred watering window (eg. 'morning'): ").lower()
-    maintenance_pref = input("Preferred maintenance level (e.g., 'low', 'moderate', 'high)").lower()
-    type_pref = input("Preferred type of plant (e.g., 'tree', 'flower', 'herb')").lower()
-
+def match_plants(sunlight_pref, watering_pref, maintenance_pref):
     cursor.execute('''
     SELECT * FROM plant_data
     WHERE (sunlight LIKE ? OR ? = '')
     AND (watering LIKE ? OR ? = '')
-    AND (watering_period LIKE ? OR ? = '')
     AND (maintenance LIKE ? OR ? = '')
-    AND (type LIKE ? OR ? = '')
+    
     ''', (f'%{sunlight_pref}%', sunlight_pref, f'%{watering_pref}%', watering_pref, 
-          f'%{watering_time_pref}%', watering_time_pref, f'%{maintenance_pref}%', maintenance_pref, 
-          f'%{type_pref}%', type_pref))
+          f'%{maintenance_pref}%', maintenance_pref, 
+          ))
 
     matches = cursor.fetchall()
     if matches:
         print("\nMatching Plants:")
-        for match in matches:
-            print(f"Common Name: {match[1]}, Scientific Name: {match[2]}, Sunlight: {match[3]}, "
-                  f"Watering: {match[4]}, Watering period: {match[5]}, Maintenance: {match[6]}, Type: {match[9]}")
+        print()
+        temp_matches = matches[:5]
+        for match in temp_matches:
+            print(f"Common Name: {match[1]}\n"
+                f"Scientific Name: {match[2]}\n"
+                f"Sunlight: {match[3]}\n"
+                f"Watering: {match[4]}\n"
+                f"Watering period: {match[5]}\n"
+                f"Maintenance: {match[6]}\n"
+                f"Type: {match[8]}\n\n"
+                f"Description: {match[7]}\n")
     else:
         print("No matches found :( Maybe a plastic plant is better for you...)")
 
+def validate_input(prompt, valid_options):
+    while True:
+        user_input = input(prompt).lower()
+        if user_input in valid_options:
+            return user_input
+        else:
+            print(f"Invalid input. Please use the examples given and enter one of the following options: {', '.join(valid_options)}")
 
 def main():
     create_tables()
+
+    sunlight_options = ['full sun', 'part shade', 'full shade', 'part sun/part shade'] 
+    watering_options = ['frequent', 'minimum', 'average']  
+    maintenance_options = ['low', 'moderate', 'high'] 
+
+    print("Please enter your plant preferences:")
+    sunlight_pref = validate_input("Preferred sunlight (e.g., 'full sun', 'part shade', 'full shade', 'part sun/part shade'): ", sunlight_options)
+    watering_pref = validate_input("Preferred watering (e.g., 'frequent', 'minimum', 'average'): ", watering_options)
+    maintenance_pref = validate_input("Preferred maintenance level (e.g., 'low', 'moderate', 'high'): ", maintenance_options)
+
     store_plant_ids()
 
     cursor.execute('SELECT id FROM plant_id')
     ids_list = [row[0] for row in cursor.fetchall()]
 
     for id_from_list in ids_list:
-        store_plant_data(id_from_list)
+        store_plant_data(id_from_list, watering_pref, maintenance_pref)
 
-    match_plants()
+    match_plants(sunlight_pref, watering_pref, maintenance_pref)
 
-    # cursor.execute('SELECT * FROM plant_data')
-    # print(cursor.fetchall())
+    #cursor.execute('SELECT * FROM plant_data')
+    #print(cursor.fetchall())
 
 
 main()
 
-'''
-Prompt input from user
-- Create table to hold user input (if need be, group by in sql)
-Create matching alogorithm
-- Take user input and select plant from plant_data that closely matches input : abi
-- Match user to plant based on input : eden
-- unit test : eden
-- style guide: abi
-- read me  : abi
-- pitch deck : eden
-
-
-Unittest
-Pep 8
-'''
