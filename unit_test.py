@@ -12,10 +12,13 @@ class TestPlantMatching(unittest.TestCase):
                 'data': [{'id': 1}, {'id': 2}, {'id': 3}]
                     }),
             unittest.mock.Mock(status_code=200, json=lambda: {
-                'id': 1, 'common_name': 'Rose', 'scientific_name': ['Rosa'], 'sunlight': ['full sun'],
-                'watering': 'frequent', 'watering_period': 'weekly', 'maintenance': 'moderate',
-                'description': 'A rose is a woody perennial flowering plant of the genus Rosa,'
-                'in the family Rosaceae, or the flower it bears.',
+                'id': 1, 'common_name': 'Rose',
+                'scientific_name': ['Rosa'], 'sunlight': ['full sun'],
+                'watering': 'frequent', 'watering_period': 'weekly',
+                'maintenance': 'moderate',
+                'description': 'A rose is a woody perennial flowering,' 
+                    'plant of the genus Rosa,'
+                    'in the family Rosaceae, or the flower it bears.',
                 'type': 'flowering'
             })
         ]
@@ -25,7 +28,7 @@ class TestPlantMatching(unittest.TestCase):
     @patch('perenual_api.requests.get')
     def test_store_plant_ids(self, mock_get):
         mock_get.return_value = unittest.mock.Mock(
-            status_code=200, 
+            status_code=200,
             json=lambda: {'data': [{'id': 1}, {'id': 2}, {'id': 3}]}
         )
 
@@ -42,7 +45,7 @@ class TestPlantMatching(unittest.TestCase):
     def test_store_plant_data(self, mock_get):
         mock_get.return_value = unittest.mock.Mock(
             status_code=200,
-            split_json = lambda: {
+                split_json = lambda: {
                 'id': 1,
                 'common_name': 'Rose',
                 'scientific_name': ['Rosa'],
@@ -50,8 +53,10 @@ class TestPlantMatching(unittest.TestCase):
                 'watering': 'frequent',
                 'watering_period': 'weekly',
                 'maintenance': 'moderate',
-                'description': 'A rose is a woody perennial flowering plant of the genus Rosa, '
-                            'in the family Rosaceae, or the flower it bears.',
+                'description': ('A rose is a woody perennial flowering,'
+                        'plant of the genus Rosa, '
+                        'in the family Rosaceae, '
+                        'or the flower it bears.'),
                 'type': 'flowering'
             }
         )
@@ -64,11 +69,11 @@ class TestPlantMatching(unittest.TestCase):
         stored_data = cursor.fetchone()
 
         expected_data = (
-        1, 'Rose', 'Rosa', 'full sun', 'frequent', 'weekly', 'moderate',
-        'A rose is a woody perennial flowering plant of the genus Rosa, '
-        'in the family Rosaceae, or the flower it bears.',
-        'flowering'
-        )
+            1, 'Rose', 'Rosa', 'full sun', 'frequent', 'weekly', 'moderate',
+            'A rose is a woody perennial flowering plant of the genus Rosa, '
+            'in the family Rosaceae, or the flower it bears.',
+            'flowering'
+            )
         self.assertEqual(stored_data[:9], expected_data)
 
     @patch('perenual_api.input', create=True)
