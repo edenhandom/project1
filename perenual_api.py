@@ -4,7 +4,7 @@ import sqlite3
 
 API_KEY = 'sk-DFJP667c913a4a5396041'
 PLANT_ID_URL = f'https://perenual.com/api/species-list?key={API_KEY}&indoor=1'
-DET_URL = f'https://perenual.com/api/species/details/{{ID}}?key={API_KEY}&indoor=1'
+URL = f'https://perenual.com/api/species/details/{{ID}}?key={API_KEY}&indoor=1'
 
 conn = sqlite3.connect('plants.db')
 cursor = conn.cursor()
@@ -47,7 +47,8 @@ def store_plant_ids():
             for plant in plants:
                 plant_id = plant.get('id')
                 if plant_id:
-                    cursor.execute('SELECT id FROM plant_id WHERE id = ?', (plant_id,))
+                    cursor.execute('SELECT id FROM plant_id WHERE id = ?',
+                    (plant_id,))
                     existing_id = cursor.fetchone()
                     if not existing_id:
                         cursor.execute('''
@@ -61,7 +62,7 @@ def store_plant_ids():
 
 # Accesses API and stores plant data in plant data table
 def store_plant_data(plant_id):
-    response_plant_details = requests.get(DET_URL.format(ID=plant_id))
+    response_plant_details = requests.get(URL.format(ID=plant_id))
     if response_plant_details.status_code == 200:
         data = response_plant_details.json()
         if data:
@@ -81,13 +82,18 @@ def store_plant_data(plant_id):
             type = data.get('type', 'Unknown')
 
             sunlight_str = ', '.join(sunlight)
-            scientific_name = scientific_name[0] if scientific_name else 'Unknown'
+            if scientific_name:
+                scientific_name = scientific_name[0]
+            else:
+                'Unknown'
 
             cursor.execute('''
             INSERT INTO plant_data (
-                id, common_name, scientific_name, sunlight, watering, watering_period, maintenance, description, type
+                id, common_name, scientific_name, sunlight, watering,
+                watering_period, maintenance, description, type
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (plant_id, common_name, scientific_name, sunlight_str, watering, watering_period, maintenance, description, type)
+            ''', (plant_id, common_name, scientific_name, sunlight_str,
+            watering, watering_period, maintenance, description, type)
             )
             conn.commit()
     else:
