@@ -17,8 +17,9 @@ class TestPlantMatching(unittest.TestCase):
                 'watering': 'frequent', 'watering_period': 'weekly',
                 'maintenance': 'moderate',
                 'description': 'A rose is a woody perennial flowering,'
-                                'plant of the genus Rosa,'
-                                'in the family Rosaceae, or the flower it bears.',
+                               'plant of the genus Rosa,'
+                               'in the family Rosaceae, or the flower,'
+                               'it bears.',
                 'type': 'flowering'
             })
         ]
@@ -45,7 +46,7 @@ class TestPlantMatching(unittest.TestCase):
     def test_store_plant_data(self, mock_get):
         mock_get.return_value = unittest.mock.Mock(
             status_code=200,
-                split_json = lambda: {
+                split_json=lambda: {
                     'id': 1,
                     'common_name': 'Rose',
                     'scientific_name': ['Rosa'],
@@ -54,9 +55,9 @@ class TestPlantMatching(unittest.TestCase):
                     'watering_period': 'weekly',
                     'maintenance': 'moderate',
                     'description': ('A rose is a woody perennial flowering,'
-                            'plant of the genus Rosa, '
-                            'in the family Rosaceae, '
-                            'or the flower it bears.'),
+                                    'plant of the genus Rosa, '
+                                    'in the family Rosaceae, '
+                                    'or the flower it bears.'),
                     'type': 'flowering'
                 }
         )
