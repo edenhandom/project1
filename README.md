@@ -13,13 +13,12 @@ that should the user's lifestyle.
 
 ### Requirements and dependencies
 Input from user:
-- Type of plant preference?
+- Sunlight requirement preference?
 - How often to water plant?
-- Natural light access?
-- Animals or children?
+- Watering time window preference?
+- Maintenance level?
 
 This program uses:
-- [Trefle API](http://trefle.io/)
 - [Perenual API](https://perenual.com/docs/api)
 
 ### Contact information (GitHub)
