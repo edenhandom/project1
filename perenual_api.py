@@ -4,7 +4,7 @@ import sqlite3
 
 API_KEY = 'sk-DFJP667c913a4a5396041'
 PLANT_ID_URL = f'https://perenual.com/api/species-list?key={API_KEY}&indoor=1'
-PLANT_DET_URL = f'https://perenual.com/api/species/details/{{ID}}?key={API_KEY}&indoor=1'
+DET_URL = f'https://perenual.com/api/species/details/{{ID}}?key={API_KEY}&indoor=1'
 
 conn = sqlite3.connect('plants.db')
 cursor = conn.cursor()
@@ -61,7 +61,7 @@ def store_plant_ids():
 
 # Accesses API and stores plant data in plant data table
 def store_plant_data(plant_id):
-    response_plant_details = requests.get(PLANT_DET_URL.format(ID=plant_id))
+    response_plant_details = requests.get(DET_URL.format(ID=plant_id))
     if response_plant_details.status_code == 200:
         data = response_plant_details.json()
         if data:
