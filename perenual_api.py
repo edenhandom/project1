@@ -71,7 +71,11 @@ def store_plant_data(plant_id):
             sunlight = data.get('sunlight', [])
             watering = data.get('watering', 'Unknown').lower()
             watering_period = data.get('watering_period', 'Unknown')
-            maintenance = data.get('maintenance', 'Unknown').lower()
+            maintenance = data.get('maintenance')
+            if maintenance is not None:
+                maintenance = maintenance.lower()
+            else:
+                maintenance = 'Unknown'
 
             description = data.get('description', 'Unknown')
             type = data.get('type', 'Unknown')
@@ -117,7 +121,7 @@ def match_plants(sunlight_pref, watering_pref, maintenance_pref):
                   f"Type: {match[8]}\n\n"
                   f"Description: {match[7]}\n")
     else:
-        print("No matches found :( Maybe a plastic plant is better for you...)")
+        print("No matches found :( Maybe a plastic plant is better for you...")
 
 
 # Function to validate the user's input
