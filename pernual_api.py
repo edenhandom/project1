@@ -7,7 +7,7 @@ Data we want from the API:
 - name, scientific name, type (aka tree), watering, watering period, poisonous to pets/humans, indoor, sunlight 
 '''
 
-API_KEY = 'sk-X8KK667c51ee33cf36041'
+API_KEY = 'sk-DFJP667c913a4a5396041'
 BASE_URL_PLANT_LIST = f'https://perenual.com/api/species-list?key={API_KEY}'
 BASE_URL_PLANT_DETAILS = f'https://perenual.com/api/species/details/{{ID}}?key={API_KEY}'
 
@@ -36,11 +36,11 @@ def create_tables():
         common_name TEXT,
         scientific_name TEXT,
         sunlight TEXT,
-        water TEXT,
+        watering TEXT,
         maintenance TEXT,
-        poisonous_to_human BOOLEAN,
-        poisonous_to_pets BOOLEAN,
-        indoor BOOLEAN,
+        poisonous_to_humans INTEGER,
+        poisonous_to_pets INTEGER,
+        indoor INTEGER,
         type TEXT
     )
     ''')
@@ -49,24 +49,33 @@ def create_tables():
 
 # Store plant IDs from plant API in plant id table
 def store_plant_ids():
-    response_plant_list = requests.get(BASE_URL_PLANT_LIST)
-    if response_plant_list.status_code == 200:
-        data = response_plant_list.json()
-        if 'data' in data:
-            plants = data['data']
-            for plant in data:
-                plant_id = plant.get('id')
-                if plant_id:
-                    cursor.execute('SELECT id FROM plant_id WHERE id = ?', (plant_id,))
-                    existing_id = cursor.fetchone()
-                if not existing_id:
-                    cursor.execute('''
-                    INSERT INTO plant_id (id)
-                    VALUES (?)
-                    ''', (plant_id,))
-        conn.commit()
-    else:
-        print("Failed to fetch")
+    page = 60
+    while page <= 380:
+        response_plant_list = requests.get(BASE_URL_PLANT_LIST,params={'key':API_KEY,'page':page})
+        if response_plant_list.status_code == 200:
+            data = response_plant_list.json()
+            if 'data' in data:
+                plants = data['data']
+                if not plants:
+                    break
+                for plant in plants:
+                    plant_id = plant.get('id')
+                    if plant_id and (plant.get("type") != 'tree'):
+                    #if plant_id and (plant.get("indoors")==True or plant.get("indoors")==False):
+                            cursor.execute('SELECT id FROM plant_id WHERE id = ?', (plant_id,))
+                            existing_id = cursor.fetchone()
+                            if not existing_id:
+                                cursor.execute('''
+                                INSERT INTO plant_id (id)
+                                VALUES (?)
+                                ''', (plant_id,))
+                page += 1
+            else:
+                break
+        else:
+            print("Failed to fetch")
+            break
+    conn.commit()
 
 # Function to store plant details plant data table
 def store_plant_data(plant_id):
@@ -79,25 +88,48 @@ def store_plant_data(plant_id):
         common_name = data.get('common_name', 'Unknown')
         scientific_name = data.get('scientific_name', [])
         sunlight = data.get('sunlight', [])
-        water = data.get('water', 'Unknown')
+        water = data.get('watering', 'Unknown')
         maintenance = data.get('maintenance', 'Unknown')
-        poisonous_to_human = data.get('poisonous_to_human', False)
-        poisonous_to_pets = data.get('poisonous_to_pets', False)
-        indoor = data.get('indoor', False)
+        poisonous_to_humans = data.get('poisonous_to_humans', 0)
+        poisonous_to_pets = data.get('poisonous_to_pets', 0)
+        indoor = data.get('indoor', 0)
         type = data.get('type', 'Unknown')
         sunlight_str = ', '.join(sunlight)
         scientific_name = scientific_name[0] if scientific_name else 'Unknown'
-
+    
         cursor.execute('''
         INSERT INTO plant_data (
-            id, common_name, scientific_name, sunlight, water, maintenance, 
-            poisonous_to_human, poisonous_to_pets, indoor, type
+            id, common_name, scientific_name, sunlight, watering, maintenance, 
+            poisonous_to_humans, poisonous_to_pets, indoor, type
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (plant_id, common_name, scientific_name, sunlight_str, water, maintenance, 
-              poisonous_to_human, poisonous_to_pets, indoor, type))
+              poisonous_to_humans, poisonous_to_pets, indoor, type))
         conn.commit()
     else:
         print("Failed to fetch")
+
+def match_plants():
+    print("Please enter your plant preferences:")
+    sunlight_pref = input("Preferred sunlight (e.g., 'full sun', 'partial shade'): ").lower()
+    watering_pref = input("Preferred watering (e.g., 'moderate', 'low'): ").lower()
+    indoor_pref = input("Indoor plant? (yes/no): ").lower()
+    
+    indoor_pref = 1 if indoor_pref == 'yes' else 0
+    
+    cursor.execute('''
+    SELECT * FROM plant_data 
+    WHERE sunlight LIKE ? OR watering LIKE ? OR indoor = ?
+    ''', (f'%{sunlight_pref}%', f'%{watering_pref}%', indoor_pref))
+    
+    matches = cursor.fetchall()
+    if matches:
+        print("\nMatching Plants:")
+        for match in matches:
+            print(f"Common Name: {match[1]}, Scientific Name: {match[2]}, Sunlight: {match[3]}, "
+                  f"Watering: {match[4]}, Maintenance: {match[5]}, Poisonous to Humans: {match[6]}, "
+                  f"Poisonous to Pets: {match[7]}, Indoor: {match[8]}, Type: {match[9]}")
+    else:
+        print("No matches found.")
 
 
 def main():
@@ -110,53 +142,26 @@ def main():
     for id_from_list in ids_list:
         store_plant_data(id_from_list)
     
+    match_plants()
+    
     cursor.execute('SELECT * FROM plant_data')
-    print(cursor.fetchall())
+    print(cursor.fetchall())())
 
-main()
-    
+mai
 
-
-
-
-
-
-
-
-    
-    
-    
-    
-    
-    
-""" 
-! scrapped perhaps ! 
-make plant ids list
-    response_plant_list = requests.get(BASE_URL_PLANT_LIST)
-    data_plant_list = response_plant_list.json()
-    # maybe need this?
-    df_plant_list = pd.DataFrame(data_plant_list)
-
-    ids = df_plant_list['data'][0].tolist()
-
-    data_plant_details_list = []
-    
-    df_plant_list.to_sql('plant_id', conn, if_exists = 'replace', index=False)
-    df_plant_details.to_sql('plant_data', conn, if_exists = 'replace', index=False)
-
-    query = '''
-    SELECT *
-    FROM plant_id
-    INNER JOIN plant_data ON plant_id.id = plant_data.id;
-
-    '''
-
-    result = pd.read_sql_query(query, conn)
-
-    conn.commit()
-    print(result)
-"""
-
-        
+'''
+Prompt input from user
+- Create table to hold user input (if need be, group by in sql)
+Create matching alogorithm
+- Take user input and select plant from plant_data that closely matches input : abi
+- Match user to plant based on input : eden 
+- unit test : eden
+- style guide: abi
+- read me  : abi
+- pitch deck : eden 
 
 
+
+Unittest
+Pep 8
+'''
