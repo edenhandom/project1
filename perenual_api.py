@@ -47,8 +47,7 @@ def store_plant_ids():
             for plant in plants:
                 plant_id = plant.get('id')
                 if plant_id:
-                    cursor.execute('SELECT id FROM plant_id WHERE id = ?',
-                    (plant_id,))
+                    cursor.execute('SELECT id FROM plant_id WHERE id = ?', (plant_id,))
                     existing_id = cursor.fetchone()
                     if not existing_id:
                         cursor.execute('''
@@ -82,18 +81,13 @@ def store_plant_data(plant_id):
             type = data.get('type', 'Unknown')
 
             sunlight_str = ', '.join(sunlight)
-            if scientific_name:
-                scientific_name = scientific_name[0]
-            else:
-                'Unknown'
+            scientific_name = scientific_name[0] if scientific_name else 'Unknown'
 
             cursor.execute('''
             INSERT INTO plant_data (
-                id, common_name, scientific_name, sunlight, watering,
-                watering_period, maintenance, description, type
+                id, common_name, scientific_name, sunlight, watering, watering_period, maintenance, description, type
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (plant_id, common_name, scientific_name, sunlight_str,
-            watering, watering_period, maintenance, description, type)
+            ''', (plant_id, common_name, scientific_name, sunlight_str, watering, watering_period, maintenance, description, type)
             )
             conn.commit()
     else:
@@ -108,8 +102,7 @@ def match_plants(sunlight_pref, watering_pref, maintenance_pref):
     AND (watering LIKE ? OR ? = '')
     AND (maintenance LIKE ? OR ? = '')
 
-    ''', (f'%{sunlight_pref}%', sunlight_pref, 
-          f'%{watering_pref}%', watering_pref,
+    ''', (f'%{sunlight_pref}%', sunlight_pref, f'%{watering_pref}%', watering_pref,
           f'%{maintenance_pref}%', maintenance_pref,
           ))
 
@@ -138,25 +131,20 @@ def validate_input(prompt, valid_options):
         if user_input in valid_options:
             return user_input
         else:
-            print(f"Invalid input. Please use the examples given and'
-                   'enter one of the following options: {', '.join(valid_options)}")
+            print(f"Invalid input. Please use the examples given and enter one of the following options: {', '.join(valid_options)}")
 
 
 def main():
     create_tables()
 
-    sunlight_options = ['full sun', 'part shade', 'full shade', 
-                        'part sun/part shade']
+    sunlight_options = ['full sun', 'part shade', 'full shade', 'part sun/part shade']
     watering_options = ['frequent', 'minimum', 'average']
     maintenance_options = ['low', 'moderate', 'high']
 
     print("Please enter your plant preferences:")
-    sunlight_pref = validate_input("Preferred sunlight (e.g., 'full sun', 'part shade', 
-                                   'full shade', 'part sun/part shade'): ", sunlight_options)
-    watering_pref = validate_input("Preferred watering (e.g., 'frequent', 
-                                   'minimum', 'average'): ", watering_options)
-    maintenance_pref = validate_input("Preferred maintenance level (e.g., 'low', 
-                                      'moderate', 'high'): ", maintenance_options)
+    sunlight_pref = validate_input("Preferred sunlight (e.g., 'full sun', 'part shade', 'full shade', 'part sun/part shade'): ", sunlight_options)
+    watering_pref = validate_input("Preferred watering (e.g., 'frequent', 'minimum', 'average'): ", watering_options)
+    maintenance_pref = validate_input("Preferred maintenance level (e.g., 'low', 'moderate', 'high'): ", maintenance_options)
 
     store_plant_ids()
 
