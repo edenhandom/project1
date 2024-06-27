@@ -3,6 +3,7 @@ from unittest.mock import patch
 import perenual_api
 import sqlite3
 
+
 class TestPlantMatching(unittest.TestCase):
     @patch('perenual_api.requests.get')
     def setUp(self, mock_get):
@@ -16,7 +17,7 @@ class TestPlantMatching(unittest.TestCase):
             })
         ]
 
-        perenual_api.create_tables() 
+        perenual_api.create_tables()
 
     @patch('perenual_api.requests.get')
     def test_store_plant_ids(self, mock_get):
@@ -70,7 +71,6 @@ class TestPlantMatching(unittest.TestCase):
         perenual_api.store_plant_data(1)
 
         perenual_api.match_plants('full sun', 'frequent', 'moderate')
-    
 
 if __name__ == '__main__':
     unittest.main()
