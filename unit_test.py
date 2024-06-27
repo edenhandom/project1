@@ -1,10 +1,13 @@
 import unittest
-from yourCodeFileName import function1, function2
+from unittest.mock import patch, MagicMock
+import sqlite3
+from perenual_api import create_tables, store_plant_ids, store_plant_data, match_plants
 
 
-class TestFileName(unittest.TestCase):
-    def test_function1(self):
-        self.assertEqual(function1(1), 0)
+class TestPlantMatching(unittest.TestCase):
+    def test_store_plant_ids(self, mock_get):
+        mock_response = MagicMock()
+        mock_response.status_code = 2
 
     def test_function2(self):
         self.assertEqual(function2(2,1), 3)
