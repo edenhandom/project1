@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch, call
-import perenual_api  
+import perenual_api
 import sqlite3
 
 
@@ -20,9 +20,12 @@ class TestPlantMatching(unittest.TestCase):
 
         # Recreate tables before each test
         perenual_api.create_tables()
-    @patch('perenual_api.requests.get')
     
     @patch('perenual_api.requests.get')
+
+    @patch('perenual_api.requests.get')
+
+
     def test_store_plant_ids(self, mock_get):
         mock_get.return_value = unittest.mock.Mock(
             status_code=200, 
@@ -74,6 +77,7 @@ class TestPlantMatching(unittest.TestCase):
         perenual_api.store_plant_data(1, 'frequent', 'low')
 
         perenual_api.match_plants('full sun', 'frequent', 'low')
+
 
         mock_print.assert_any_call("\nMatching Plants:")
         mock_print.assert_any_call("\nCommon Name: Rose\nScientific Name: Rosa\nSunlight: full sun\nWatering: frequent\nWatering period: weekly\nMaintenance: low\nType: flowering\n\nDescription: A rose is a woody perennial flowering plant of the genus Rosa, in the family Rosaceae, or the flower it bears.\n")
