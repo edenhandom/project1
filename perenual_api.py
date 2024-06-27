@@ -52,8 +52,8 @@ def create_tables():
 # Store plant IDs from plant API in plant id table
 def store_plant_ids():
     # Picked a random window of data from the API to look at
-    page = 160
-    while page <= 162:
+    page = 166
+    while page <= 169:
         response_plant_list = requests.get(BASE_URL_PLANT_LIST, params={'key': API_KEY, 'page': page})
         # If request is successful
         if response_plant_list.status_code == 200:
@@ -125,20 +125,28 @@ def match_plants():
     sunlight_pref = input("Preferred sunlight (e.g., 'full sun', 'partial shade'): ").lower()
     watering_pref = input("Preferred watering (e.g., 'moderate', 'low'): ").lower()
     watering_time_pref = input("Preferred watering window (eg. 'morning'): ").lower()
+    maintenance_pref = input("Preferred maintenance level (e.g., 'low', 'moderate', 'high)").lower()
+    type_pref = input("Preferred type of plant (e.g., 'tree', 'flower', 'herb')").lower()
 
     cursor.execute('''
     SELECT * FROM plant_data
-    WHERE sunlight LIKE ? OR watering LIKE ? or watering_period LIKE ?
-    ''', (f'%{sunlight_pref}%', f'%{watering_pref}%', f'%{watering_time_pref}'))
+    WHERE (sunlight LIKE ? OR ? = '')
+    AND (watering LIKE ? OR ? = '')
+    AND (watering_period LIKE ? OR ? = '')
+    AND (maintenance LIKE ? OR ? = '')
+    AND (type LIKE ? OR ? = '')
+    ''', (f'%{sunlight_pref}%', sunlight_pref, f'%{watering_pref}%', watering_pref, 
+          f'%{watering_time_pref}%', watering_time_pref, f'%{maintenance_pref}%', maintenance_pref, 
+          f'%{type_pref}%', type_pref))
 
     matches = cursor.fetchall()
     if matches:
         print("\nMatching Plants:")
         for match in matches:
             print(f"Common Name: {match[1]}, Scientific Name: {match[2]}, Sunlight: {match[3]}, "
-                  f"Watering: {match[4]}, Watering period: {match[5]}, Maintenance: {match[6]}")
+                  f"Watering: {match[4]}, Watering period: {match[5]}, Maintenance: {match[6]}, Type: {match[9]}")
     else:
-        print("No matches found.")
+        print("No matches found :( Maybe a plastic plant is better for you...)")
 
 
 def main():
