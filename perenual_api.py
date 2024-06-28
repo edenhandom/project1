@@ -39,23 +39,31 @@ def create_tables():
 
 # Accesses the API and store plant IDs in a table
 def store_plant_ids():
-    response_plant_list = requests.get(PLANT_ID_URL, params={'key': API_KEY})
-    if response_plant_list.status_code == 200:
-        data = response_plant_list.json()
-        if 'data' in data:
-            plants = data['data']
-            for plant in plants:
-                plant_id = plant.get('id')
-                if plant_id:
-                    cursor.execute('SELECT id FROM plant_id WHERE id = ?', (plant_id,))
-                    existing_id = cursor.fetchone()
-                    if not existing_id:
-                        cursor.execute('''
-                        INSERT INTO plant_id (id)
-                        VALUES (?)
-                        ''', (plant_id,))
-    else:
-        print("Failed to fetch")
+
+    page = 1
+
+    while page <=2:
+
+        response_plant_list = requests.get(PLANT_ID_URL, params={'key': API_KEY, 'page': page})
+        if response_plant_list.status_code == 200:
+            data = response_plant_list.json()
+            if 'data' in data:
+                plants = data['data']
+                for plant in plants:
+                    plant_id = plant.get('id')
+                    if plant_id:
+                        cursor.execute('SELECT id FROM plant_id WHERE id = ?', (plant_id,))
+                        existing_id = cursor.fetchone()
+                        if not existing_id:
+                            cursor.execute('''
+                            INSERT INTO plant_id (id)
+                            VALUES (?)
+                            ''', (plant_id,))
+            page += 1
+        else:
+            print("Failed to fetch")
+            break
+    
     conn.commit()
 
 
