@@ -99,7 +99,7 @@ def store_plant_data(plant_id):
                 id, common_name, scientific, sunlight, watering,
                 watering_period, maintenance, description, type
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (plant_id, common_name, scientific, sunlight_str, watering, 
+            ''', (plant_id, common_name, scientific, sunlight_str, watering,
                   watering_period, maintenance, description, type)
             )
             conn.commit()
@@ -145,7 +145,9 @@ def validate_input(prompt, valid_options):
         if user_input in valid_options:
             return user_input
         else:
-            print(f"Invalid input. Please use the examples given and enter one of the following options: {', '.join(valid_options)}")
+            print(f"Invalid input. Please use the examples given and 
+                  enter one of the following options: 
+                  {', '.join(valid_options)}")
 
 
 def main():
@@ -156,9 +158,12 @@ def main():
     maintenance_options = ['low', 'moderate', 'high']
 
     print("Please enter your plant preferences:")
-    sunlight_pref = validate_input("Preferred sunlight (e.g., 'full sun', 'part shade', 'full shade', 'part sun/part shade'): ", sunlight_options)
-    watering_pref = validate_input("Preferred watering (e.g., 'frequent', 'minimum', 'average'): ", watering_options)
-    maintenance_pref = validate_input("Preferred maintenance level (e.g., 'low', 'moderate', 'high'): ", maintenance_options)
+    sunlight_pref = validate_input("Preferred sunlight (e.g., 'full sun',
+                                   'part shade', 'full shade', 'part sun/part shade'): ", sunlight_options)
+    watering_pref = validate_input("Preferred watering (e.g., 'frequent', 'minimum',
+                                   'average'): ", watering_options)
+    maintenance_pref = validate_input("Preferred maintenance level (e.g., 'low',
+                                      'moderate', 'high'): ", maintenance_options)
 
     store_plant_ids()
 
