@@ -153,19 +153,24 @@ def validate_input(prompt, valid_options):
 def main():
     create_tables()
 
-    sunlight_options = ['full sun', 'part shade', 'full shade', 'part sun/part shade']
+    sunlight_options = [
+                'full sun', 
+                'part shade', 
+                'full shade', 
+                'part sun/part shade'
+    ]
     watering_options = ['frequent', 'minimum', 'average']
     maintenance_options = ['low', 'moderate', 'high']
 
     print("Please enter your plant preferences:")
     sunlight_pref = validate_input(
-        "Preferred sunlight (e.g., 'full sun', 'part shade', 'full shade', 'part sun/part shade'): ", 
+        "Preferred sunlight (e.g., 'full sun', 'part shade', 'full shade', 'part sun/part shade'): ",
         sunlight_options)
     watering_pref = validate_input(
-        "Preferred watering (e.g., 'frequent', 'minimum', 'average'): ", 
+        "Preferred watering (e.g., 'frequent', 'minimum', 'average'): ",
         watering_options)
     maintenance_pref = validate_input(
-        "Preferred maintenance level (e.g., 'low', 'moderate', 'high'): ", 
+        "Preferred maintenance level (e.g., 'low', 'moderate', 'high'): ",
         maintenance_options)
 
     store_plant_ids()
