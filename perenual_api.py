@@ -25,7 +25,7 @@ def create_tables():
     CREATE TABLE IF NOT EXISTS plant_data (
         id INTEGER PRIMARY KEY,
         common_name TEXT,
-        scientific_name TEXT,
+        scientific TEXT,
         sunlight TEXT,
         watering TEXT,
         watering_period TEXT,
@@ -45,7 +45,7 @@ def store_plant_ids():
     while page <= 2:
 
         response_plant_list = requests.get(PLANT_ID_URL,
-                                           params={'key': API_KEY, 
+                                           params={'key': API_KEY,
                                                    'page': page})
         if response_plant_list.status_code == 200:
             data = response_plant_list.json()
@@ -54,7 +54,7 @@ def store_plant_ids():
                 for plant in plants:
                     plant_id = plant.get('id')
                     if plant_id:
-                        cursor.execute('SELECT id FROM plant_id WHERE id = ?', 
+                        cursor.execute('SELECT id FROM plant_id WHERE id = ?',
                                        (plant_id,))
                         existing_id = cursor.fetchone()
                         if not existing_id:
@@ -66,7 +66,7 @@ def store_plant_ids():
         else:
             print("Failed to fetch")
             break
-    
+
     conn.commit()
 
 
@@ -78,7 +78,7 @@ def store_plant_data(plant_id):
         if data:
             id = data.get('id', 'Unknown')
             common_name = data.get('common_name', 'Unknown')
-            scientific_name = data.get('scientific_name', [])
+            scientific = data.get('scientific_name', [])
             sunlight = data.get('sunlight', [])
             watering = data.get('watering', 'Unknown').lower()
             watering_period = data.get('watering_period', 'Unknown')
@@ -92,13 +92,15 @@ def store_plant_data(plant_id):
             type = data.get('type', 'Unknown')
 
             sunlight_str = ', '.join(sunlight)
-            scientific_name = scientific_name[0] if scientific_name else 'Unknown'
+            scientific = scientific[0] if scientific else 'Unknown'
 
             cursor.execute('''
             INSERT INTO plant_data (
-                id, common_name, scientific_name, sunlight, watering, watering_period, maintenance, description, type
+                id, common_name, scientific, sunlight, watering,
+                watering_period, maintenance, description, type
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (plant_id, common_name, scientific_name, sunlight_str, watering, watering_period, maintenance, description, type)
+            ''', (plant_id, common_name, scientific, sunlight_str, watering, 
+                  watering_period, maintenance, description, type)
             )
             conn.commit()
     else:
@@ -113,7 +115,8 @@ def match_plants(sunlight_pref, watering_pref, maintenance_pref):
     AND (watering LIKE ? OR ? = '')
     AND (maintenance LIKE ? OR ? = '')
 
-    ''', (f'%{sunlight_pref}%', sunlight_pref, f'%{watering_pref}%', watering_pref,
+    ''', (f'%{sunlight_pref}%', sunlight_pref,
+          f'%{watering_pref}%', watering_pref,
           f'%{maintenance_pref}%', maintenance_pref,
           ))
 
