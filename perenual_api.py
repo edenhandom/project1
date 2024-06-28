@@ -42,9 +42,10 @@ def store_plant_ids():
 
     page = 1
 
-    while page <=2:
+    while page <= 2:
 
-        response_plant_list = requests.get(PLANT_ID_URL, params={'key': API_KEY, 'page': page})
+        response_plant_list = requests.get(PLANT_ID_URL, 
+                                           params={'key': API_KEY, 'page': page})
         if response_plant_list.status_code == 200:
             data = response_plant_list.json()
             if 'data' in data:
