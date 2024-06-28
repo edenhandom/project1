@@ -154,9 +154,9 @@ def main():
     create_tables()
 
     sunlight_options = [
-                'full sun', 
-                'part shade', 
-                'full shade', 
+                'full sun',
+                'part shade',
+                'full shade',
                 'part sun/part shade'
     ]
     watering_options = ['frequent', 'minimum', 'average']
