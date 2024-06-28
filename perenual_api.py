@@ -44,8 +44,9 @@ def store_plant_ids():
 
     while page <= 2:
 
-        response_plant_list = requests.get(PLANT_ID_URL, 
-                                           params={'key': API_KEY, 'page': page})
+        response_plant_list = requests.get(PLANT_ID_URL,
+                                           params={'key': API_KEY, 
+                                                   'page': page})
         if response_plant_list.status_code == 200:
             data = response_plant_list.json()
             if 'data' in data:
@@ -53,7 +54,8 @@ def store_plant_ids():
                 for plant in plants:
                     plant_id = plant.get('id')
                     if plant_id:
-                        cursor.execute('SELECT id FROM plant_id WHERE id = ?', (plant_id,))
+                        cursor.execute('SELECT id FROM plant_id WHERE id = ?', 
+                                       (plant_id,))
                         existing_id = cursor.fetchone()
                         if not existing_id:
                             cursor.execute('''
