@@ -165,8 +165,8 @@ def main():
     print("Please enter your plant preferences:")
     sunlight_pref = validate_input(
         (
-        "Preferred sunlight (e.g., 'full sun', 'part shade', "
-        "'full shade','part sun/part shade'): "
+            "Preferred sunlight (e.g., 'full sun', 'part shade', "
+            "'full shade','part sun/part shade'): "
         ),
         sunlight_options)
     watering_pref = validate_input(
